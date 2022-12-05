@@ -1,7 +1,6 @@
 #include <cmath>
 #include <vector>
 #include <fstream>
-#include <algorithm>
 #include "geometry.h"
 #include "ray.h"
 #include "objects.h"
@@ -14,8 +13,7 @@ typedef vector<Object*> Objects;
 typedef vector<Light*> Lights;
 
 // funkcija koja ispisuje sliku u .ppm file
-void save_image(const Image &image, const int width, const int height, const string path)
-{
+void save_image(const Image &image, const int width, const int height, const string path) {
     ofstream ofs;
     ofs.open(path, ofstream::binary);
 
@@ -23,8 +21,7 @@ void save_image(const Image &image, const int width, const int height, const str
     ofs << "P6\n" << width << " " << height << "\n255\n";
 
     // ispis pixela
-    for (int i = 0; i < width * height; ++i)
-    {
+    for (int i = 0; i < width * height; ++i) {
         ofs << (char)(255 * min(max(image[i][0], 0.f), 1.f));
         ofs << (char)(255 * min(max(image[i][1], 0.f), 1.f));
         ofs << (char)(255 * min(max(image[i][2], 0.f), 1.f));
@@ -35,81 +32,58 @@ void save_image(const Image &image, const int width, const int height, const str
 }
 
 // funkcija koja provjerava sijece li zraka jedan od objekata
-bool scene_intersect(const Ray &ray, const Objects &objs, Material &hit_material, Vec3f &hit_point, Vec3f &hit_normal)
-{
+bool scene_intersect(const Ray &ray, const Objects &objs, Material &hit_material, Vec3f &hit_point, Vec3f &hit_normal) {
     float best_dist = numeric_limits<float>::max();
     float dist = numeric_limits<float>::max();
 
     Vec3f normal;
 
-    for (auto obj : objs)
-    {
-        if (obj->ray_intersect(ray, dist, normal) && dist < best_dist)
-        {
+    for (auto obj : objs) {
+        if (obj->ray_intersect(ray, dist, normal) && dist < best_dist) {
             best_dist = dist;             // udaljenost do sfere
-            hit_material = obj->material; // materijal pogodjene sfere
-            hit_normal = normal;          // normala na pogodjeni objekt
-            hit_point = ray.origin + ray.direction * dist; // pogodjena tocka
+            hit_material = obj->material; // materijal sfere
+            hit_normal = normal;          // normala na objekt
+            hit_point = ray.origin + ray.direction * dist; // dodirna tocka
         }
     }
-
     return best_dist < 1000;
 }
 
 // funkcija koja vraca boju
-Vec3f cast_ray(const Ray &ray, const Objects &objs, const Lights &lights, const float &depth)
-{
+Vec3f cast_ray(const Ray &ray, const Objects &objs, const Lights &lights, const float &depth) {
     int maxDepth = 5;
     Vec3f hit_normal;
     Vec3f hit_point;
     Material hit_material;
 
-    if (!scene_intersect(ray, objs, hit_material, hit_point, hit_normal) || depth > maxDepth)
-    {
+    if (!scene_intersect(ray, objs, hit_material, hit_point, hit_normal) || depth > maxDepth) {
         return Vec3f(0.8, 0.8, 1); // vrati boju pozadine
     }
-    else
-    {
+    else {
         float diffuse_light_intensity = 0;
         float specular_light_intensity = 0;
 
-        for (auto light : lights)
-        {
+        for (auto light : lights) {
             Vec3f light_dir = (light->position - hit_point).normalize();
             float light_dist = (light->position - hit_point).norm();
 
-            // SJENE
-            // ideja: - rekurzivno pozovi scene_intersect od objekta do svijetla
-            //        - ako se nesto nalazi izmedju svjetla i objekta,
-            //          tada to svijetlo ignoriramo
             Material shadow_hit_material;
             Vec3f shadow_hit_normal;
             Vec3f shadow_hit_point;
 
-            // zbog gresaka u zaokrizivanju moze se dogoditi da zraka zapocne
-            // unutar samog objekta. Da to izbjegnemu, origin zrake  za malo
-            // pomicemo u smjeru zrake
             Vec3f shadow_origin;
-            if (light_dir * hit_normal < 0) // skalarni produkt je manji od 0 ako su suprotne orijentacije
-            {
+            if (light_dir * hit_normal < 0) {
                 shadow_origin = hit_point - hit_normal * 0.001;
             }
-            else
-            {
+            else {
                 shadow_origin = hit_point + hit_normal * 0.001;
             }
             Ray shadow_ray(shadow_origin, light_dir);
 
-            // provjeri hoce li zraka shadow_ray presijecatiobjekt
-            if (scene_intersect(shadow_ray, objs, shadow_hit_material, shadow_hit_point, shadow_hit_normal))
-            {
-                // zraka sijece neki objekt
-                // trebamo jos provjeriti zaklanja li taj objekt svjetlo
-                // tj. nalazi li se izmedju hit_point i light->position
+            // provjeriti hoce li zraka shadow_ray presijecati objekt
+            if (scene_intersect(shadow_ray, objs, shadow_hit_material, shadow_hit_point, shadow_hit_normal)) {
                 float dist = (shadow_hit_point - hit_point).norm();
-                if (dist < light_dist)
-                {
-                    // objekt zaklanja svijetlo, preskacemo ovu iteraciju
+                if (dist < light_dist) {
                     continue;
                 }
             }
@@ -138,15 +112,11 @@ Vec3f cast_ray(const Ray &ray, const Objects &objs, const Lights &lights, const 
     }
 }
 
-// funkcija koja napravi zraku iz točke origin
-// koja prolazi kroz pixel (i, j) na slici
-// (formula s predavanja 3)
-Ray ray_to_pixel(Vec3f origin, int i, int j, int width, int height)
-{
+Ray ray_to_pixel(Vec3f origin, int i, int j, int width, int height) {
     Ray ray = Ray();
     ray.origin = origin;
 
-    float fov = 1.855; // 106.26° u radijanima
+    float fov = 1.8;
     float tg = tan(fov / 2.);
 
     float x =  (-1 + 2 * (i + 0.5) / (float)width) * tg;
@@ -195,7 +165,6 @@ int main() {
     blue.phong_exp = 300;
 
     Material grey(Vec3f(0.5, 0.5, 0.5), 1);
-
 
     // definiraj objekte u sceni
     Cuboid plane(Vec3f(-30, -5, -30), Vec3f(30, -4.5, 9), grey);
