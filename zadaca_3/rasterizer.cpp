@@ -33,7 +33,7 @@ float helper_func_vec3(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3)
 
 float area(float x1, float y1, float x2, float y2, float x3, float y3)
 {
-    return abs((x1*(y2 - y3) + x2*(y3 - y1)+ x3*(y1 - y2)) / 2.0);
+    return abs(( x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0 );
 }
 
 bool in_triangle(float x1, float y1, float x2, float y2, float x3, float y3, float x, float y) // (x, y) is the current point
@@ -52,8 +52,8 @@ void draw_triangle_2d(TGAImage& image, float x0, float y0, float x1, float y1, f
     long maxY = ceil  (max (max(y0, y1), y2));
     long minY = floor (min (min(y0, y1), y2));
 
-    for (auto j = minY; j <= maxY ; ++j)
-        for (auto i = minX; i <= maxX; ++i)
+    for (int j = minY; j <= maxY ; ++j)
+        for (int i = minX; i <= maxX; ++i)
             if (in_triangle(x0, y0, x1, y1, x2, y2, i, j))
                 image.set(i, j, color);  //since the image is 512x512px the difference between setting (i, j) as (x, y) and (j, i) as (x, y) is one 90deg rotation
 }
@@ -71,9 +71,9 @@ void draw_triangle_2d_gouraurd(TGAImage& image, float x0, float y0, const TGACol
     {
         for (int i = minX; i <= maxX; ++i)
         {
-            float fst = helper_func(x1,y1,x2,y2,i,j) / helper_func(x1,y1,x2,y2,x0,y0);
-            float snd = helper_func(x2,y2,x0,y0,i,j) / helper_func(x2,y2,x0,y0,x1,y1);
-            float trd = helper_func(x0, y0, x1, y1,i,j) / helper_func(x0, y0, x1, y1,x2,y2);
+            float fst = helper_func(x1, y1, x2, y2, i, j) / helper_func(x1, y1, x2, y2, x0, y0);
+            float snd = helper_func(x2, y2, x0, y0, i, j) / helper_func(x2, y2, x0, y0, x1, y1);
+            float trd = helper_func(x0, y0, x1, y1, i, j) / helper_func(x0, y0, x1, y1, x2, y2);
 
             if (in_triangle(x0, y0, x1, y1, x2, y2, i, j))
             {
@@ -99,10 +99,10 @@ void draw_triangle(TGAImage &image, const Vec3 v1, const Vec3 v2, const Vec3 v3,
         {
             Vec2 p = {static_cast<float>(i + 0.5),static_cast<float>(height - j + 0.5) };
             float fst = helper_func_vec2(v3_new, v2_new, p);
-            float snd  = helper_func_vec2(v1_new,v3_new, p);
-            float trd = helper_func_vec2(v2_new,v1_new, p);
+            float snd  = helper_func_vec2(v1_new, v3_new, p);
+            float trd = helper_func_vec2(v2_new, v1_new, p);
             if((fst >= 0 && snd >= 0 && trd >= 0))
-                image.set(i, j,color);
+                image.set(i, j, color);
         }
     }
 }
@@ -131,14 +131,14 @@ void draw_triangle_tex(TGAImage& image, float x0, float y0, float z0, float x1, 
     uv1[0] /= B[2]; uv1[1] /= B[2];
     uv2[0] /= C[2]; uv2[1] /= C[2];
 
-    for (int j = 0; j < height; j++)
+    for (int j = 0; j < height; ++j)
     {
-        for (int i = 0; i < width; i++)
+        for (int i = 0; i < width; ++i)
         {
             Vec3 p = {static_cast<float>(i + 0.5),static_cast<float>(height - j + 0.5), 0 };
             float fst = helper_func_vec3(C_new, B_new, p);
-            float snd  = helper_func_vec3(A_new,C_new, p);
-            float trd = helper_func_vec3(B_new,A_new, p);
+            float snd  = helper_func_vec3(A_new, C_new, p);
+            float trd = helper_func_vec3(B_new, A_new, p);
             if((fst >= 0 && snd >= 0 && trd >= 0))
             {
                 color = texture.get(i, j);
@@ -209,8 +209,8 @@ int main()
     Vec3 vertex3{13, 34, 114};
     //draw_triangle(image, vertex1, vertex2, vertex3, white);
 
-    //draw_triangle_tex(image, -48, -10,  82, 29, -15,  44, 13,  34, 114,0,0,0,1,1,0, "./textures/texture.tga");
-    draw_triangle_tex_corrected(image, -48, -10,  82, 29, -15,  44, 13,  34, 114,0,0,0,1,1,0, "./textures/texture.tga");
+    //draw_triangle_tex(image, -48, -10,  82, 29, -15,  44, 13,  34, 114, 0, 0, 0, 1, 1, 0, "./textures/texture.tga");
+    draw_triangle_tex_corrected(image, -48, -10,  82, 29, -15,  44, 13,  34, 114, 0, 0, 0, 1, 1, 0, "./textures/texture.tga");
 
     // spremi sliku
     image.flip_vertically();
