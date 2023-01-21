@@ -25,7 +25,7 @@ static float deltaTime = 0.0f;	// time between current frame and last frame
 static float lastFrame = 0.0f;
 
 // lighting
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 lightPos(1.2f, 1.0f, 5.0f);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -121,7 +121,7 @@ int main()
         glm::vec3( 2.0f,  5.0f, -15.0f),
         glm::vec3(-1.5f, -2.2f, -2.5f),
         glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3 (2.4f, -0.4f, -3.5f),
+        glm::vec3(2.4f, -0.4f, -3.5f),
         glm::vec3(-1.7f,  3.0f, -7.5f),
         glm::vec3( 1.3f, -2.0f, -2.5f),
         glm::vec3( 1.5f,  2.0f, -2.5f),
@@ -203,20 +203,21 @@ int main()
 
         for (unsigned int i = 0; i < 10; i++)
         {
-            // activate shader
-            lightingShader.use();
-            glBindVertexArray(VAO);
-            lightingShader.setVec3("objectColor", 0.0f, 0.61f, 1.0f);
-            lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-            lightingShader.setVec3("lightPos", lightPos);
-            lightingShader.setVec3("viewPos", camera.Position);
-
             // world transformation
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
             float angle = 20.0f * i;
             model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
             lightingShader.setMat4("model", model);
+
+
+            // activate shader
+            lightingShader.use();
+            glBindVertexArray(VAO);
+            lightingShader.setVec3("objectColor", 0.0f, 0.61f, 1.0f);
+            lightingShader.setVec3("viewPos", camera.Position);
+
+
 
             // view/projection transformations
             glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -227,22 +228,27 @@ int main()
             // render the cubes
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
             glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
-            // draw the lamp object
-            lightSourceShader.use();
-            glBindVertexArray(lightCubeVAO);
-
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, lightPos);
-            model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-            lightSourceShader.setMat4("projection", projection);
-            lightSourceShader.setMat4("view", view);
-            lightSourceShader.setMat4("model", model);
-
-            // render the light source
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-            glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
         }
+
+        // draw the lamp object
+        lightSourceShader.use();
+        glBindVertexArray(lightCubeVAO);
+
+        lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+        lightingShader.setVec3("lightPos", lightPos);
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 view = camera.GetViewMatrix();
+        lightSourceShader.setMat4("projection", projection);
+        lightSourceShader.setMat4("view", view);
+        lightSourceShader.setMat4("model", model);
+
+        // render the light source
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
