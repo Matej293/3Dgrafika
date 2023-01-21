@@ -79,7 +79,7 @@ int main()
                      "shaders/basicFragmentLighting.fs");
 
     Shader lightSourceShader("shaders/lightsourceVertexShader.vs",
-                       "lightingFragmentShader.fs");
+                       "shaders/lightingFragmentShader.fs");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
